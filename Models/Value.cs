@@ -1,17 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-/// <summary>
-
-/// </summary>
-public class Value
+namespace DatingApp.API.Models
 {
-	public int Id { get; set; }
-	public string Name { get; set; }
-
-	public Value()
+	public class Value
 	{
-		//
-		// TODO: Add constructor logic here
-		//
+		public int Id { get; set; }
+		public string Name { get; set; }
+
+		public Value()
+		{
+	
+		}
 	}
 }
