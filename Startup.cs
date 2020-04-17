@@ -31,6 +31,9 @@ namespace DatingApp.API
                 Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllers();
             services.AddCors();
+            services.AddScoped<IAuthRepository, AuthRepository>();
+            //AddScope creates one instance for element(for example each HTTP request) just like singleton but for certain scope
+            //thanks to this it will be avaible for injection
 
             //THE ORDER HERE IS NOT IMPORTANT!!!!!!!!!!!!!!
         }
