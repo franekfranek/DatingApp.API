@@ -52,6 +52,16 @@ namespace DatingApp.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
+            //try
+            //{
+            //    //code
+            //    throw new Exception("siemka to ja exception");
+            //}
+            //catch
+            //{
+            //    return StatusCode(500, "hello from the catch block!");
+            //}
+
             var userFromRepo = await _repo.Login(user.Username.ToString(), user.Password);
 
             if(userFromRepo == null)
