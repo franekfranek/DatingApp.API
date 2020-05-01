@@ -12,6 +12,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Diagnostics;
+
 namespace DatingApp.API.Controllers
 {
     [Route("api/[controller]")]
