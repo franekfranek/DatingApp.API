@@ -58,7 +58,7 @@ namespace DatingApp.API.Data
 
 			await _context.Users.AddAsync(user);
 			await _context.SaveChangesAsync();
-
+		
 			return user;
 		}
 
