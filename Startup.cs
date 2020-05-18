@@ -19,6 +19,7 @@ using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using DatingApp.API.Helpers;
+using AutoMapper;
 
 namespace DatingApp.API
 {
@@ -36,11 +37,17 @@ namespace DatingApp.API
         {
             services.AddDbContext<DataContext>(x => x.UseSqlite(
                 Configuration.GetConnectionString("DefaultConnection")));
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(opt =>
+            {
+                opt.SerializerSettings.ReferenceLoopHandling =
+                Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
             services.AddCors();
+            services.AddAutoMapper(typeof(DatingRepository).Assembly);//we can use any class here we just need Assembly
             services.AddScoped<IAuthRepository, AuthRepository>();
             //AddScope creates one instance for element(for example each HTTP request) just like singleton but for certain scope
             //thanks to this it will be avaible for injection
+            services.AddScoped<IDatingRepository, DatingRepository>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                              .AddJwtBearer(options =>
                              {
@@ -53,6 +60,7 @@ namespace DatingApp.API
                                      ValidateAudience = false
                                  };
                              });
+
             //THE ORDER IN CONFIGURE SERVICE IS NOT IMPORTANT!!!!!!!!!!!!!!
         }
         //getconnctionstring is shorthand for getSection(connectionStrings) from appsetting.json
