@@ -19,6 +19,7 @@ using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using DatingApp.API.Helpers;
+using AutoMapper;
 
 namespace DatingApp.API
 {
@@ -42,6 +43,7 @@ namespace DatingApp.API
                 Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
             services.AddCors();
+            services.AddAutoMapper(typeof(DatingRepository).Assembly);//we can use any class here we just need Assembly
             services.AddScoped<IAuthRepository, AuthRepository>();
             //AddScope creates one instance for element(for example each HTTP request) just like singleton but for certain scope
             //thanks to this it will be avaible for injection
