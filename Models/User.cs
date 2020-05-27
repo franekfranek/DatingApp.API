@@ -22,8 +22,6 @@ namespace DatingApp.API.Models
 		public string Country { get; set; }
 		public ICollection<Photo> Photos { get; set; }
 
-
-
 		public User()
 		{
 			
