@@ -60,7 +60,7 @@ namespace DatingApp.API
                                      ValidateAudience = false
                                  };
                              });
-
+            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             //THE ORDER IN CONFIGURE SERVICE IS NOT IMPORTANT!!!!!!!!!!!!!!
         }
         //getconnctionstring is shorthand for getSection(connectionStrings) from appsetting.json
