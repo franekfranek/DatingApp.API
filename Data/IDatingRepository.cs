@@ -17,5 +17,6 @@ namespace DatingApp.API.Data
         // or false which means no changes to save or there were some problems with saving
         Task<IEnumerable<User>> GetUsers();
         Task<User> GetUser(int id);
+        Task<Photo> GetPhoto(int id);
     }
 }

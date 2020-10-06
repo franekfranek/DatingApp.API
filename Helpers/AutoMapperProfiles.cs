@@ -33,6 +33,8 @@ namespace DatingApp.API.Helpers
             CreateMap<Photo, PhotosForDetailedDto>();
             CreateMap<UserForUpdateDto, User>();
 
+            CreateMap<Photo, PhotoForReturnDto>();
+            CreateMap<PhotoForCreationDto, Photo>();
             //AutoMapper is convention based that means if we provide above createMap and 2 classes 
             //automaper will map automatically all of the properties with the same name so here 
             // Username or City but not the Age from dto (DateofBirth from user) and PhotoUrl(Photos from user) so
