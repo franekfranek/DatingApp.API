@@ -28,6 +28,11 @@ namespace DatingApp.API.Data
             //no async same explaination as for Add method
         }
 
+        public async Task<Photo> GetMainPhotoForUser(int userId)
+        {
+            return await _context.Photos.Where(x => x.UserId == userId).FirstOrDefaultAsync(x => x.IsMain);
+        }
+
         public async Task<Photo> GetPhoto(int id)
         {
 
