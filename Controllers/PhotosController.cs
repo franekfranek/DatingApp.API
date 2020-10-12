@@ -43,7 +43,7 @@ namespace DatingApp.API.Controllers
             _cloudinary = new Cloudinary(acc);
         }
 
-        [HttpGet("{id}", Name ="GetPhoto")]
+        [HttpGet("{id}", Name = "GetPhoto")]
         public async Task<IActionResult> GetPhoto(int id)
         {
             var photoFromRepo = await _repository.GetPhoto(id);
@@ -54,8 +54,8 @@ namespace DatingApp.API.Controllers
         }
 
         //no route paramiters because we specified route above
-        [HttpPost] 
-        public async Task<IActionResult> AddPhotoForUser(int userId,[FromForm] PhotoForCreationDto photoForCreationDto)
+        [HttpPost]
+        public async Task<IActionResult> AddPhotoForUser(int userId, [FromForm] PhotoForCreationDto photoForCreationDto)
         {
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
@@ -67,9 +67,9 @@ namespace DatingApp.API.Controllers
 
             var uploadResult = new ImageUploadResult();
 
-            if(file.Length > 0)
+            if (file.Length > 0)
             {
-                using(var stream = file.OpenReadStream())//it reads the file into memory
+                using (var stream = file.OpenReadStream())//it reads the file into memory
                 {
                     var uploadParams = new ImageUploadParams()
                     {
@@ -87,7 +87,7 @@ namespace DatingApp.API.Controllers
             var photo = _mapper.Map<Photo>(photoForCreationDto);
 
             //for first photo only
-            if(!userFromRepo.Photos.Any(u => u.IsMain))
+            if (!userFromRepo.Photos.Any(u => u.IsMain))
             {
                 photo.IsMain = true;
             }
@@ -99,7 +99,7 @@ namespace DatingApp.API.Controllers
                 //this is what we send back to the client
                 var photoToReturn = _mapper.Map<PhotoForReturnDto>(photo);
 
-                return CreatedAtRoute("GetPhoto", new { userId = userId, id = photo.Id }, photoToReturn);     
+                return CreatedAtRoute("GetPhoto", new { userId = userId, id = photo.Id }, photoToReturn);
             }
 
 
@@ -133,6 +133,49 @@ namespace DatingApp.API.Controllers
             else
                 return BadRequest("Could not set photo to main");
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePhoto(int userId, int id)
+        {
+            //checking if id from token is the same as userId
+            if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+                return Unauthorized();
+            var user = await _repository.GetUser(userId);
+
+            //if id we passing does not match any of the photo id in user collection
+            if (!user.Photos.Any(p => p.Id == id))
+                return Unauthorized();
+            var photoFromRepo = await _repository.GetPhoto(id);
+
+            if (photoFromRepo.IsMain)
+                return BadRequest("You cannot delete ur main photo!");
+
+
+            //photo is from Cloudinary
+            if(photoFromRepo.PublicID != null)
+            {
+                var deleteParams = new DeletionParams(photoFromRepo.PublicID);
+                var result = _cloudinary.Destroy(deleteParams);
+
+                if (result.Result == "ok")
+                {
+                    _repository.Delete(photoFromRepo);
+                };
+            }
+            //no-Cloudinary photo
+            if(photoFromRepo.PublicID == null)
+            {
+                _repository.Delete(photoFromRepo);
+            }
+
+            if (await _repository.SaveAll())
+            {
+                return Ok();
+            }
+
+            return BadRequest("Failed to delete your photo");
+        }
+
 
     }
 }

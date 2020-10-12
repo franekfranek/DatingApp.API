@@ -11,8 +11,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-
 using System.Diagnostics;
+using AutoMapper;
 
 namespace DatingApp.API.Controllers
 {
@@ -22,11 +22,14 @@ namespace DatingApp.API.Controllers
     {
         private readonly IAuthRepository _repo;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-        public AuthController(IAuthRepository repository, IConfiguration configuration)
+        public AuthController(IAuthRepository repository, IConfiguration configuration,
+                                IMapper mapper)
         {
-            this._repo = repository;
-            this._configuration = configuration;
+            _repo = repository;
+            _configuration = configuration;
+            _mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -91,9 +94,14 @@ namespace DatingApp.API.Controllers
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
+            //returing user's main photo, no new dto for clarity
+            var userForPhoto = _mapper.Map<UserForListDto>(userFromRepo);
+
+
             return Ok(new
             {
-                token = tokenHandler.WriteToken(token)
+                token = tokenHandler.WriteToken(token),
+                userForPhoto
             });
 
         }
