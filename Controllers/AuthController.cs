@@ -43,13 +43,19 @@ namespace DatingApp.API.Controllers
                 return BadRequest("Username already exists!");
             }
 
-            var userToCreate = new User
-            {
-                Username = user.Username,
-            };
+            var userToCreate = _mapper.Map<User>(user);
             var createdUser = await _repo.Register(userToCreate, user.Password);
 
-            return StatusCode(201);
+            // another dto could be created but no need for it
+            // we cannot return createdUser in CreateAtRoute cause it has password etc. 
+            var userToReturn = _mapper.Map<UserForDetailedDto>(createdUser);
+
+
+            //with CreatedAtRoute we send back Location Header with the Request as well as
+            // the resource we created - createdUser
+            // Location Header: http://localhost:5000/api/Users/11?controllers=Users 
+            // this is a route to get this individual user as well
+            return CreatedAtRoute("GetUser", new { controllers = "Users", id=createdUser.Id}, userToReturn);
         }
 
         [HttpPost("login")]
@@ -65,7 +71,7 @@ namespace DatingApp.API.Controllers
             //    return StatusCode(500, "hello from the catch block!");
             //}
 
-            var userFromRepo = await _repo.Login(user.Username.ToString(), user.Password);
+            var userFromRepo = await _repo.Login(user.Username.ToString().ToLower(), user.Password);
 
             if(userFromRepo == null)
             {
