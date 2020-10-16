@@ -62,6 +62,7 @@ namespace DatingApp.API
                              });
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             //THE ORDER IN CONFIGURE SERVICE IS NOT IMPORTANT!!!!!!!!!!!!!!
+            services.AddScoped<LogUserActivity>();
         }
         //getconnctionstring is shorthand for getSection(connectionStrings) from appsetting.json
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
