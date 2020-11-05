@@ -10,6 +10,7 @@ namespace DatingApp.API.DTOSs
         public string Description { get; set; }
         public DateTime DateAdded { get; set; }
         public string PublicId { get; set; }//from cloudinary
+        public bool IsApproved { get; set; } = false;
 
         public PhotoForCreationDto()
         {

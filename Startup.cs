@@ -20,6 +20,12 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using DatingApp.API.Helpers;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using DatingApp.API.Models;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
+using System.Windows.Markup;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 namespace DatingApp.API
 {
@@ -35,19 +41,24 @@ namespace DatingApp.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DataContext>(x => x.UseSqlite(
-                Configuration.GetConnectionString("DefaultConnection")));
-            services.AddControllers().AddNewtonsoftJson(opt =>
+            //THE ORDER IN CONFIGURE SERVICE IS NOT IMPORTANT!! (for 3.1)
+            //just AddIdentity use cookies and default identity 
+            // we use JWT tokens so we need more conf
+            IdentityBuilder builder = services.AddIdentityCore<User>(opt =>
             {
-                opt.SerializerSettings.ReferenceLoopHandling =
-                Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                // this is for development not production
+                opt.Password.RequireDigit = false;
+                opt.Password.RequiredLength = 4;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequireUppercase = false;
             });
-            services.AddCors();
-            services.AddAutoMapper(typeof(DatingRepository).Assembly);//we can use any class here we just need Assembly
-            services.AddScoped<IAuthRepository, AuthRepository>();
-            //AddScope creates one instance for element(for example each HTTP request) just like singleton but for certain scope
-            //thanks to this it will be avaible for injection
-            services.AddScoped<IDatingRepository, DatingRepository>();
+
+            builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
+            builder.AddEntityFrameworkStores<DataContext>();
+            builder.AddRoleValidator<RoleValidator<Role>>();
+            builder.AddRoleManager<RoleManager<Role>>();
+            builder.AddSignInManager<SignInManager<User>>();
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                              .AddJwtBearer(options =>
                              {
@@ -60,9 +71,45 @@ namespace DatingApp.API
                                      ValidateAudience = false
                                  };
                              });
+
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+                opt.AddPolicy("ModeratePhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
+                opt.AddPolicy("VipOnly", policy => policy.RequireRole("VIP"));
+            });
+
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
-            //THE ORDER IN CONFIGURE SERVICE IS NOT IMPORTANT!!!!!!!!!!!!!!
+
+            services.AddDbContext<DataContext>(x => x.UseSqlite(
+                Configuration.GetConnectionString("DefaultConnection")));
+            services.AddControllers(options => 
+            {
+                //this makes all users by default need to authorize
+                // for every single endpoint
+                // attribute annonmous is need to  to allow users
+                // we can delte all authorize attribute from our endpoint
+                var policy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+
+                options.Filters.Add(new AuthorizeFilter(policy));
+
+            })
+            .AddNewtonsoftJson(opt =>
+            {
+                
+                opt.SerializerSettings.ReferenceLoopHandling =
+                Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+            services.AddCors();
+            services.AddAutoMapper(typeof(DatingRepository).Assembly);//we can use any class here we just need Assembly
+            //AddScope creates one instance for element(for example each HTTP request) just like singleton but for certain scope
+            //thanks to this it will be avaible for injection
+            services.AddScoped<IDatingRepository, DatingRepository>();
+            
             services.AddScoped<LogUserActivity>();
+            services.AddHttpContextAccessor();
         }
         //getconnctionstring is shorthand for getSection(connectionStrings) from appsetting.json
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -43,11 +43,11 @@ namespace DatingApp.API.Helpers
                 .ForMember(m => m.RecipientPhotoUrl, opt => opt
                     .MapFrom(u => u.Recipient.Photos.FirstOrDefault(p => p.IsMain).Url));
             
-            //AutoMapper is convention based that means if we provide above createMap and 2 classes 
-            //automaper will map automatically all of the properties with the same name so here 
+            // AutoMapper is convention based that means if we provide above createMap and 2 classes 
+            // automaper will map automatically all of the properties with the same name so here 
             // Username or City but not the Age from dto (DateofBirth from user) and PhotoUrl(Photos from user) so
-            //we need configuration for these
-            //the order here is like this CreateMap<from class to class>
+            // we need configuration for these
+            // the order here is like this CreateMap<from class to class>
         }
     }
 }

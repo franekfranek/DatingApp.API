@@ -17,7 +17,7 @@ namespace DatingApp.API.Data
         //it returns a boolean: if there is any change to our db then we return true
         // or false which means no changes to save or there were some problems with saving
         Task<PagedList<User>> GetUsers(UserParams userParamsT);
-        Task<User> GetUser(int id);
+        Task<User> GetUser(int id, bool isCurrentUser);
         Task<Photo> GetPhoto(int id);
         Task<Photo> GetMainPhotoForUser(int userId);
         Task<Like> GetLike(int userId, int recipientId); //users ids

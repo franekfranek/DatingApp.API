@@ -19,7 +19,6 @@ namespace DatingApp.API.Controllers
     //it is on the top of the controller 
     //so gonna be use if any of method will be called
     [ServiceFilter(typeof(LogUserActivity))]    
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -37,7 +36,7 @@ namespace DatingApp.API.Controllers
         public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams)//from query string
         {
             var currenUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var userFromRepo = await _repository.GetUser(currenUserId);
+            var userFromRepo = await _repository.GetUser(currenUserId, true);
 
             userParams.UserId = currenUserId;
             if (string.IsNullOrEmpty(userParams.Gender))
@@ -60,7 +59,8 @@ namespace DatingApp.API.Controllers
         [HttpGet("{id}", Name ="GetUser")]
         public async Task<IActionResult> GetUser(int id)
         {
-            var user = await _repository.GetUser(id);
+            var isCurrentUser = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value) == id;
+            var user = await _repository.GetUser(id, isCurrentUser);
 
             var userToReturn = _mapper.Map<UserForDetailedDto>(user);
 
@@ -75,7 +75,7 @@ namespace DatingApp.API.Controllers
                 return Unauthorized();
             //it checks if token which server receiving is a match to user which attempts to do it
 
-            var userFromRepo = await _repository.GetUser(id);
+            var userFromRepo = await _repository.GetUser(id, true);
 
             _mapper.Map(userForUpdateDto, userFromRepo);
 
@@ -102,7 +102,7 @@ namespace DatingApp.API.Controllers
             }
 
             //no user with that id to like
-            if(await _repository.GetUser(recipientId) == null)
+            if(await _repository.GetUser(recipientId, false) == null)
             {
                 return NotFound();
             }

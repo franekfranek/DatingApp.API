@@ -1,5 +1,7 @@
 using DatingApp.API.Data;
+using DatingApp.API.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,9 +21,11 @@ namespace DatingApp.API
                 try
                 {
                     var context = serivces.GetRequiredService<DataContext>();
+                    var userManager = serivces.GetRequiredService<UserManager<User>>();
+                    var roleManger = serivces.GetRequiredService<RoleManager<Role>>();
                     context.Database.Migrate(); //it will check every time we run application if there is a pending migration
                     //if yes it will create it for us
-                    Seed.SeedUser(context);
+                    Seed.SeedUser(userManager, roleManger);
                     //this is usedful because if we mess up db we can just drop it and start again with a clean one
                 }
                 catch (Exception ex)

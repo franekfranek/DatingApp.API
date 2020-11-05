@@ -1,9 +1,12 @@
 ﻿using DatingApp.API.Helpers;
 using DatingApp.API.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace DatingApp.API.Data
@@ -11,10 +14,14 @@ namespace DatingApp.API.Data
     public class DatingRepository : IDatingRepository
     {
         private readonly DataContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UserManager<User> _userManager;
 
-        public DatingRepository(DataContext context)
+        public DatingRepository(DataContext context, IHttpContextAccessor httpContextAccessor, UserManager<User> userManager)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            _userManager = userManager;
         }
         public void Add<T>(T entity) where T : class
         {
@@ -44,14 +51,25 @@ namespace DatingApp.API.Data
         public async Task<Photo> GetPhoto(int id)
         {
 
-            return await _context.Photos.FirstOrDefaultAsync(x => x.Id == id);
+            return await _context.Photos.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<User> GetUser(int id)
+        public async Task<User> GetUser(int id, bool isCurrentUser)
         {
-            var user = await _context.Users.Include(p => p.Photos)
-                                     .FirstOrDefaultAsync(u => u.Id == id);
+            //var loggedUserName = _httpContextAccessor.HttpContext.User.Identity.Name;
+            //var currentUser = await _userManager.FindByNameAsync(loggedUserName);
+
+            var query = _context.Users.Include(p => p.Photos)
+                                     .AsQueryable();
             //photos here are considered naviation property
+            if (isCurrentUser)
+            {
+                query = query.IgnoreQueryFilters();
+            }
+
+            var user = await query.FirstOrDefaultAsync(u => u.Id == id);
+
             return user;
         }
 
@@ -153,7 +171,7 @@ namespace DatingApp.API.Data
             switch (messageParams.MessageContainer)
             {
                 case "Inbox":
-                    messages = messages.Where(u => u.RecipientId == messageParams.UserId && 
+                    messages = messages.Where(u => u.RecipientId == messageParams.UserId &&
                                                 u.RecipientDeleted == false);
                     break;
                 case "Outbox":
@@ -170,5 +188,7 @@ namespace DatingApp.API.Data
 
             return await PagedList<Message>.CreateAsync(messages, messageParams.PageNumber, messageParams.PageSize);
         }
+
+        
     }
 }

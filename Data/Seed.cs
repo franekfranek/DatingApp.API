@@ -1,4 +1,5 @@
 ﻿using DatingApp.API.Models;
+using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,29 +10,52 @@ namespace DatingApp.API.Data
 {
     public class Seed
     {
-        public static void SeedUser(DataContext context)
+        public static void SeedUser(UserManager<User> userManager, RoleManager<Role> roleManager)
         {
-            if (!context.Users.Any())
+            if (!userManager.Users.Any())
             {
                 var userData = System.IO.File.ReadAllText("Data/UserSeedData.json");
 
                 var users = JsonConvert.DeserializeObject<List<User>>(userData);
 
-                foreach (var user in users)
-                {
-                    byte[] passwordHash, passworSalt;
-                    CreatePasswordHash("password", out passwordHash, out passworSalt); //out means same obj not copy
+                //create some roles
 
-                    user.PasswordHash = passwordHash;
-                    user.PasswordSalt = passworSalt;
-                    user.Username = user.Username.ToLower();
-                    context.Users.Add(user);
+                var roles = new List<Role>
+                {
+                    new Role{ Name = "Member"},
+                    new Role{ Name = "Admin"},
+                    new Role{ Name = "Moderator"},
+                    new Role{ Name = "VIP"},
+                };
+
+                foreach (var role in roles)
+                {
+                    // wait because it is not async
+                    roleManager.CreateAsync(role).Wait();
                 }
 
-                context.SaveChanges();
 
-                //this dont have to be async method because we do it only once before any users so no concurency can appear==
-                //no other method will be called when this called
+                foreach (var user in users)
+                {
+                    // we need to use wait because the context is not async
+                    user.Photos.SingleOrDefault().IsApproved = true;
+                    userManager.CreateAsync(user, "password").Wait();
+                    userManager.AddToRoleAsync(user, "Member");
+                }
+
+                // create admin user and assign role 
+                var adminUser = new User
+                {
+                    UserName = "Admin"
+                };
+
+                var result = userManager.CreateAsync(adminUser, "password").Result;
+
+                if (result.Succeeded)
+                {
+                    var admin = userManager.FindByNameAsync("Admin").Result;
+                    userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
+                }
             }
         }
         private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)

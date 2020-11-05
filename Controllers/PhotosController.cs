@@ -16,7 +16,6 @@ using DatingApp.API.Models;
 
 namespace DatingApp.API.Controllers
 {
-    [Authorize]
     [Route("api/users/{userId}/photos")]
     [ApiController]
     public class PhotosController : ControllerBase
@@ -61,7 +60,7 @@ namespace DatingApp.API.Controllers
                 return Unauthorized();
             //it checks if token which server receiving is a match to user which attempts to do it
 
-            var userFromRepo = await _repository.GetUser(userId);
+            var userFromRepo = await _repository.GetUser(userId, true);
 
             var file = photoForCreationDto.File;
 
@@ -111,7 +110,7 @@ namespace DatingApp.API.Controllers
         {
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            var user = await _repository.GetUser(userId);
+            var user = await _repository.GetUser(userId, true);
 
             //if id we passing does not match any of the photo id in user collection
             if (!user.Photos.Any(p => p.Id == id))
@@ -140,7 +139,7 @@ namespace DatingApp.API.Controllers
             //checking if id from token is the same as userId
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            var user = await _repository.GetUser(userId);
+            var user = await _repository.GetUser(userId, true);
 
             //if id we passing does not match any of the photo id in user collection
             if (!user.Photos.Any(p => p.Id == id))
