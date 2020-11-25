@@ -38,10 +38,29 @@ namespace DatingApp.API
 
         public IConfiguration Configuration { get; }
 
+
+        public void ConfigureDevelopmentServices(IServiceCollection services)
+        {
+            services.AddDbContext<DataContext>(x => x.UseSqlite(
+               Configuration.GetConnectionString("DefaultConnection")));
+
+            ConfigureServices(services);
+        }
+        
+        public void ConfigureProductionServices(IServiceCollection services)
+        {
+            services.AddDbContext<DataContext>(x => x.UseSqlServer(
+               Configuration.GetConnectionString("DefaultConnection")));
+
+            ConfigureServices(services);
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             //THE ORDER IN CONFIGURE SERVICE IS NOT IMPORTANT!! (for 3.1)
+
+
             //just AddIdentity use cookies and default identity 
             // we use JWT tokens so we need more conf
             IdentityBuilder builder = services.AddIdentityCore<User>(opt =>
@@ -81,8 +100,7 @@ namespace DatingApp.API
 
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
 
-            services.AddDbContext<DataContext>(x => x.UseSqlite(
-                Configuration.GetConnectionString("DefaultConnection")));
+           
             services.AddControllers(options => 
             {
                 //this makes all users by default need to authorize
@@ -142,7 +160,7 @@ namespace DatingApp.API
 
             //app.UseHttpsRedirection();
 
-            //in .net 2.2 3 above methods were in one UseMvc()
+            //in .net 2.2  above methods were in one UseMvc()
             app.UseRouting();
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
@@ -152,11 +170,14 @@ namespace DatingApp.API
             app.UseAuthentication();
             app.UseAuthorization();
 
-
+            // looks for html file in wwwroot folder in case doesnt find file
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapFallbackToController("Index", "Fallback");
             });
 
             //THE ORDER HERE IS IMPORTANT!!!!!!!!!!!!!!
